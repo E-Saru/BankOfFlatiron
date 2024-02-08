@@ -1,13 +1,20 @@
 import logo from './logo.svg';
 import './App.css';
+import { Route, Switch } from 'react-router-dom';
 import SearchBar from './components/SearchBar';
 import TransactionTable from './components/TransactionTable';
 import AddTransactionForm from './components/AddTransactionForm';
 import { useState } from 'react';
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useEffect } from 'react';
+import NavBar from './components/NavBar';
+import About from './components/About';
+import Home from './components/Home';
+import AddTransaction from './components/AddTransaction';
+import EditTransaction from './components/EditTransaction';
 
 function App() {
+  const[page, setPage] = useState("/")
   // state to hold transactions 
   const [transactions, setTransactions] = useState([]);
   //using a copy of the search value
@@ -46,26 +53,8 @@ function App() {
        transaction.description.toLowerCase().includes(term.toLowerCase())
   );
 
-  const addTransaction = async (newTransaction) => {
-      try {
-          const response = await fetch("https://json-server-vercel-seven-tau.vercel.app/transactions", {
-             method: 'POST',
-             headers: {
-              'Content-Type' : 'application/json'
-             },
-             body: JSON.stringify(newTransaction)
-          });
-          if(response.ok){
-                //re render 
-                fetchTransaction(); 
-          }else {
-               console.log('Error adding transaction ' , response.statusText)
-          }
-      }catch(error) {
-        console.error("error adding transaction " , error)
-      }
-  }
-
+  
+  
   const handleDelete = async (id) => {
     try {
         const response = await fetch(`https://json-server-vercel-seven-tau.vercel.app/transactions/${id}`, {
@@ -80,6 +69,28 @@ function App() {
     }catch(error) {
       console.error("error deleting transaction " , error)
     }
+}
+ 
+const handleEdit = async (editedTransaction) => {
+  try {
+      const response = await fetch("https://json-server-vercel-seven-tau.vercel.app/transactions", {
+         method: 'PATCH',
+         headers: {
+          'Content-Type' : 'application/json'
+         },
+         body: JSON.stringify(editedTransaction)
+      });
+      if(response.ok){
+          const updatedTransactions = transactions.map(
+            transaction => transaction.id === editedTransaction.id ? editedTransaction : transaction);
+            //re render 
+            setTransaction(updatedTransactions); 
+      }else {
+           console.log('Error adding transaction ' , response.statusText)
+      }
+  }catch(error) {
+    console.error("error adding transaction " , error)
+  }
 }
 
 //sort function 
@@ -106,7 +117,22 @@ const handleSort = (type) => {
 
   return (
     <div className="App">
-        <h2>Bank Of FlatIron</h2>
+      <h1>Bank Of FlatIron</h1>
+      <NavBar onChangePage={setPage} />
+      <Switch>
+        <Route exact path='/About'>
+          <About />
+        </Route>
+        <Route exact path='/AddTransaction'>
+          <AddTransaction />
+        </Route>
+        <Route exact path='/'>
+          <Home />
+        </Route>
+      </Switch>
+      
+
+        
         <SearchBar onSearch={handleSearch} />
         <br></br>
         <button style={{
@@ -118,8 +144,8 @@ const handleSort = (type) => {
         <button  style={{
           margin: 10
         }} className='btn btn-primary' onClick={() => handleSort('description')}>Sort by Description</button>
-        <TransactionTable transactions={filteredTransactions} onDelete={handleDelete}/>
-        <AddTransactionForm onAdd={addTransaction}/>
+        <TransactionTable transactions={filteredTransactions} onDelete={handleDelete} onEdit={handleEdit} />
+        <EditTransaction />
     </div>
   );
 }

@@ -6,6 +6,7 @@ export default function TransactionTable({transactions, onDelete}){
    const handleDelete = (id) => {
           onDelete(id)
    }
+
     return (
        <>
          <div className="container">
